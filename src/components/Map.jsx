@@ -11,16 +11,20 @@ import {
 import styles from "./Map.module.css";
 import { useState, useEffect } from "react";
 import { useCities } from "../contexts/CitiesContext";
+import { useGeolocation } from "../hooks/useGeolocation";
+import Button from "./Button";
+import { useUrlPosition } from "../hooks/useUrlPosition";
 
 function Map() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { cities } = useCities();
-
   const [mapPosition, setMapPosition] = useState([40, 0]);
-
-  const [searchParams, setSearchParams] = useSearchParams();
-  const mapLat = searchParams.get("lat");
-  const mapLng = searchParams.get("lng");
+  const {
+    isLoading: isLoadingPosition,
+    position: geolocationPosition,
+    getPosition,
+  } = useGeolocation();
+  const [mapLat, mapLng] = useUrlPosition();
 
   useEffect(
     function () {
@@ -29,8 +33,22 @@ function Map() {
     [mapLat, mapLng]
   );
 
+  useEffect(
+    function () {
+      if (geolocationPosition) {
+        setMapPosition([geolocationPosition.lat, geolocationPosition.lng]);
+      }
+    },
+    [geolocationPosition]
+  );
+
   return (
     <div className={styles.mapContainer}>
+      {!geolocationPosition && (
+        <Button type="position" onClick={getPosition}>
+          {isLoadingPosition ? "ロード中だよ..." : "あなたはどこ？"}
+        </Button>
+      )}
       <MapContainer
         center={mapPosition}
         zoom={13}
